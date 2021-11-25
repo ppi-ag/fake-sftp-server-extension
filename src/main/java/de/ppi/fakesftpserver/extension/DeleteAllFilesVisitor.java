@@ -1,4 +1,4 @@
-package com.github.stefanbirkner.fakesftpserver.extension;
+package de.ppi.fakesftpserver.extension;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

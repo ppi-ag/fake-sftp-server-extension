@@ -2,15 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.stefanbirkner</groupId>
-    <artifactId>fake-sftp-server-rule</artifactId>
-    <version>3.0.0</version>
+    <groupId>de.ppi</groupId>
+    <artifactId>fake-sftp-server-extension</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Fake SFTP Server Rule</name>
-    <description>Fake SFTP Server Rule is a JUnit rule that runs an in-memory SFTP server.</description>
-    <url>https://github.com/stefanbirkner/fake-sftp-server-rule/</url>
-    <inceptionYear>2016</inceptionYear>
+    <name>Fake SFTP Server Extension</name>
+    <description>Fake SFTP Server Extension is a JUnit extension that runs an in-memory SFTP server.</description>
+    <url>https://github.com/ppi-ag/fake-sftp-server-extension/</url>
+    <inceptionYear>2021</inceptionYear>
     <licenses>
         <license>
             <name>MIT License</name>
@@ -20,9 +20,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/stefanbirkner/fake-sftp-server-rule.git</connection>
-        <developerConnection>scm:git:git@github.com:stefanbirkner/fake-sftp-server-rule.git</developerConnection>
-        <url>https://github.com/stefanbirkner/fake-sftp-server-rule/</url>
+        <connection>scm:git:git://github.com/ppi-ag/fake-sftp-server-extension.git</connection>
+        <developerConnection>scm:git:git@github.com:ppi-ag/fake-sftp-server-extension.git</developerConnection>
+        <url>https://github.com/ppi-ag/fake-sftp-server-extension/</url>
     </scm>
 
     <properties>

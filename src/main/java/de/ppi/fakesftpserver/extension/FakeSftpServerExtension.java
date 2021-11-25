@@ -1,9 +1,11 @@
-package com.github.stefanbirkner.fakesftpserver.extension;
+package de.ppi.fakesftpserver.extension;
 
+import de.ppi.fakesftpserver.utils.SftpServerUtil;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
-import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 import org.apache.sshd.sftp.server.UnsupportedAttributePolicy;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -16,9 +18,6 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 import static com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder.newLinux;
 import static java.nio.file.Files.*;
@@ -39,14 +38,14 @@ import static java.util.Collections.singletonList;
  * <p>This Extension starts a server before your test and stops it afterwards.
  * <p>By default the SFTP server listens on an auto-allocated port. During the
  * test this port can be obtained by {@link #getPort() sftpServer.getPort()}. It
- * can be changed by calling {@link #setPort(int)}. If you do this from within a
+ * can be changed by calling {@link #setManualPort(int)}. If you do this from within a
  * test then the server gets restarted. The time-consuming restart can be
  * avoided by setting the port immediately after creating the Extension.
  * <pre>
  * public class TestClass {
  *   &#064;RegisterExtension
  *   private final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
- *       .setPort(1234);
+ *       .setManualPort(1234);
  *
  *   ...
  * }
@@ -157,50 +156,52 @@ import static java.util.Collections.singletonList;
 @Slf4j
 public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCallback, AutoCloseable {
 
-    private final Map<String, String> usernamesAndPasswords = new HashMap<>();
-    private Integer port;
+    private static final int HIGHEST_PORT = 65535;
+    private static final int LOWEST_PORT = 1;
 
+    private final InMemoryAuthenticator authenticator = new InMemoryAuthenticator();
     private FileSystem fileSystem;
     private SshServer server;
 
+    @Getter
+    private Integer manualPort;
+
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(final ExtensionContext extensionContext) throws Exception {
+        // this method will be called on the beginning of a test
+        final FileSystem newFileSystem = this.createFileSystem();
+        this.startServer(newFileSystem);
+    }
+
+    @Override
+    public void afterEach(final ExtensionContext extensionContext) throws Exception {
+        // this method will be called after a test
         this.close();
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        create();
-    }
-
-    @Override
     public void close() throws Exception {
-        if (server != null) {
-            server.stop();
-            server = null;
+        if (this.server != null) {
+            this.server.stop();
+            this.server = null;
         }
 
-        if (fileSystem != null) {
-            fileSystem.close();
-            fileSystem = null;
+        if (this.fileSystem != null) {
+            this.fileSystem.close();
+            this.fileSystem = null;
         }
     }
 
     /**
-     * Returns the port of the SFTP server. If the SFTP server listens on an
-     * auto-allocated port (that means you didn't call {@link #setPort(int)})
-     * then you can only call this method during the test.
+     * Returns the port of the running SFTP server.
      *
      * @return the port of the SFTP server.
-     * @throws IllegalStateException if you call the method outside a test
-     *                               but haven't called {@link #setPort(int)}) before.
+     * @throws IllegalStateException if you call the method outside a test.
      */
-    public int getPort() {
-        if (port == null)
-            return getPortFromServer();
-        else
-            return port;
+    int getPort() {
+        this.verifyThatFileSystemIsOpen("call getPort()");
+        return this.server.getPort();
     }
 
     /**
@@ -213,15 +214,17 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IllegalArgumentException if the port is not between 1 and 65535.
      * @throws IllegalStateException    if the server cannot be restarted.
      */
-    public FakeSftpServerExtension setPort(int port) {
-        if (port < 1 || port > 65535)
-            throw new IllegalArgumentException("Port cannot be set to " + port
+    FakeSftpServerExtension setManualPort(final int port) {
+        if (port < LOWEST_PORT || port > HIGHEST_PORT) {
+            throw new IllegalArgumentException("Port cannot be set to "
+                + port
                 + " because only ports between 1 and 65535 are valid.");
+        }
 
-        this.port = port;
+        this.manualPort = port;
 
-        if (server != null) {
-            restartServer();
+        if (this.server != null) {
+            this.restartServer();
         }
 
         return this;
@@ -238,8 +241,8 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param password the password for the specified username.
      * @return the Extension itself.
      */
-    public FakeSftpServerExtension addUser(String username, String password) {
-        usernamesAndPasswords.put(username, password);
+    FakeSftpServerExtension addUser(@NonNull final String username, @NonNull final String password) {
+        this.authenticator.putUser(username, password);
         return this;
     }
 
@@ -252,9 +255,9 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param encoding the encoding of the file.
      * @throws IOException if the file cannot be written.
      */
-    public void putFile(String path, String content, Charset encoding) throws IOException {
-        byte[] contentAsBytes = content.getBytes(encoding);
-        putFile(path, contentAsBytes);
+    void putFile(final String path, final String content, final Charset encoding) throws IOException {
+        final byte[] contentAsBytes = content.getBytes(encoding);
+        this.putFile(path, contentAsBytes);
     }
 
     /**
@@ -265,10 +268,10 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param content the files content.
      * @throws IOException if the file cannot be written.
      */
-    public void putFile(String path, byte[] content) throws IOException {
-        verifyThatFileSystemIsOpen("upload file");
-        Path pathAsObject = fileSystem.getPath(path);
-        ensureDirectoryOfPathExists(pathAsObject);
+    private void putFile(final String path, final byte[] content) throws IOException {
+        this.verifyThatFileSystemIsOpen("upload file");
+        final Path pathAsObject = this.fileSystem.getPath(path);
+        SftpServerUtil.ensureDirectoryOfPathExists(pathAsObject);
         write(pathAsObject, content);
     }
 
@@ -281,11 +284,10 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException if the file cannot be written or the input stream
      *                     cannot be read.
      */
-    @SuppressWarnings("unused")
-    public void putFile(String path, InputStream is) throws IOException {
-        verifyThatFileSystemIsOpen("upload file");
-        Path pathAsObject = fileSystem.getPath(path);
-        ensureDirectoryOfPathExists(pathAsObject);
+    void putFile(final String path, final InputStream is) throws IOException {
+        this.verifyThatFileSystemIsOpen("upload file");
+        final Path pathAsObject = this.fileSystem.getPath(path);
+        SftpServerUtil.ensureDirectoryOfPathExists(pathAsObject);
         copy(is, pathAsObject);
     }
 
@@ -295,9 +297,9 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param path the directory's path.
      * @throws IOException if the directory cannot be created.
      */
-    public void createDirectory(String path) throws IOException {
-        verifyThatFileSystemIsOpen("create directory");
-        Path pathAsObject = fileSystem.getPath(path);
+    void createDirectory(final String path) throws IOException {
+        this.verifyThatFileSystemIsOpen("create directory");
+        final Path pathAsObject = this.fileSystem.getPath(path);
         Files.createDirectories(pathAsObject);
     }
 
@@ -307,9 +309,9 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param paths the directories' paths.
      * @throws IOException if at least one directory cannot be created.
      */
-    public void createDirectories(String... paths) throws IOException {
-        for (String path : paths) {
-            createDirectory(path);
+    void createDirectories(final String... paths) throws IOException {
+        for (final String path : paths) {
+            this.createDirectory(path);
         }
     }
 
@@ -323,8 +325,8 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException           if the file cannot be read.
      * @throws IllegalStateException if not called from within a test.
      */
-    public String getFileContent(String path, Charset encoding) throws IOException {
-        byte[] content = getFileContent(path);
+    String getFileContent(final String path, final Charset encoding) throws IOException {
+        final byte[] content = this.getFileContent(path);
         return new String(content, encoding);
     }
 
@@ -336,9 +338,9 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException           if the file cannot be read.
      * @throws IllegalStateException if not called from within a test.
      */
-    public byte[] getFileContent(String path) throws IOException {
-        verifyThatFileSystemIsOpen("download file");
-        Path pathAsObject = fileSystem.getPath(path);
+    byte[] getFileContent(final String path) throws IOException {
+        this.verifyThatFileSystemIsOpen("download file");
+        final Path pathAsObject = this.fileSystem.getPath(path);
         return readAllBytes(pathAsObject);
     }
 
@@ -350,9 +352,9 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @return {@code true} iff the file exists, and it is not a directory.
      * @throws IllegalStateException if not called from within a test.
      */
-    public boolean existsFile(String path) {
-        verifyThatFileSystemIsOpen("check existence of file");
-        Path pathAsObject = fileSystem.getPath(path);
+    boolean existsFile(final String path) {
+        this.verifyThatFileSystemIsOpen("check existence of file");
+        final Path pathAsObject = this.fileSystem.getPath(path);
         return exists(pathAsObject) && !isDirectory(pathAsObject);
     }
 
@@ -362,69 +364,55 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException if an I/O error is thrown while deleting the files
      *                     and directories
      */
-    public void deleteAllFilesAndDirectories() throws IOException {
-        for (Path directory : fileSystem.getRootDirectories()) {
+    void deleteAllFilesAndDirectories() throws IOException {
+        for (final Path directory : this.fileSystem.getRootDirectories()) {
             walkFileTree(directory, new DeleteAllFilesVisitor());
         }
     }
 
-    private int getPortFromServer() {
-        verifyThatFileSystemIsOpen("call getPort()");
-        return server.getPort();
-    }
-
     private void restartServer() {
         try {
-            server.stop();
-            startServer(fileSystem);
-        } catch (IOException e) {
+            this.server.stop();
+
+            // sometimes, the system needs some time to release the port
+            Thread.sleep(100);
+
+            this.startServer(this.fileSystem);
+        } catch (final IOException e) {
             throw new IllegalStateException("The SFTP server cannot be restarted.", e);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
     private FileSystem createFileSystem() throws IOException {
-        fileSystem = newLinux().build("fakeSftpExtension@" + this.hashCode());
-        return fileSystem;
+        this.fileSystem = newLinux().build("fakeSftpExtension@" + this.hashCode());
+        return this.fileSystem;
     }
 
-    private void startServer(FileSystem fileSystem) throws IOException {
-        SshServer newServer = SshServer.setUpDefaultServer();
+    private void startServer(final FileSystem fileSystem) throws IOException {
+        final SshServer newServer = SshServer.setUpDefaultServer();
 
         newServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());
-        newServer.setPasswordAuthenticator(this::authenticate);
+        newServer.setPasswordAuthenticator(this.authenticator);
         newServer.setSubsystemFactories(singletonList(new SftpSubsystemFactory.Builder()
             .withUnsupportedAttributePolicy(UnsupportedAttributePolicy.Warn)
             .build()));
         newServer.setFileSystemFactory(new CustomFileSystemFactory(new UnclosableFileSystem(fileSystem)));
 
-        if (port != null) {
-            newServer.setPort(port);
+        if (this.getManualPort() != null) {
+            newServer.setPort(this.getManualPort());
         }
 
         newServer.start();
         this.server = newServer;
     }
 
-    private boolean authenticate(String username, String password, ServerSession session) {
-        return usernamesAndPasswords.isEmpty()
-            || Objects.equals(usernamesAndPasswords.get(username), password);
-    }
-
-    private void ensureDirectoryOfPathExists(Path path) throws IOException {
-        Path directory = path.getParent();
-        if (directory != null && !directory.equals(path.getRoot()))
-            Files.createDirectories(directory);
-    }
-
-    private void verifyThatFileSystemIsOpen(String mode) {
-        if (fileSystem == null) {
+    private void verifyThatFileSystemIsOpen(final String mode) {
+        if (this.fileSystem == null) {
             throw new IllegalStateException(
                 "Failed to " + mode + " because test has not been started or is already finished.");
         }
     }
 
-    private void create() throws Exception {
-        FileSystem newFileSystem = createFileSystem();
-        startServer(newFileSystem);
-    }
 }

@@ -1,4 +1,4 @@
-package com.github.stefanbirkner.fakesftpserver.extension;
+package de.ppi.fakesftpserver.extension;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +18,9 @@ class UnclosableFileSystem extends FileSystem {
 
     final FileSystem fileSystem;
 
-
     @Override
     public FileSystemProvider provider() {
-        return fileSystem.provider();
+        return this.fileSystem.provider();
     }
 
     @Override
@@ -31,51 +30,51 @@ class UnclosableFileSystem extends FileSystem {
 
     @Override
     public boolean isOpen() {
-        return fileSystem.isOpen();
+        return this.fileSystem.isOpen();
     }
 
     @Override
     public boolean isReadOnly() {
-        return fileSystem.isReadOnly();
+        return this.fileSystem.isReadOnly();
     }
 
     @Override
     public String getSeparator() {
-        return fileSystem.getSeparator();
+        return this.fileSystem.getSeparator();
     }
 
     @Override
     public Iterable<Path> getRootDirectories() {
-        return fileSystem.getRootDirectories();
+        return this.fileSystem.getRootDirectories();
     }
 
     @Override
     public Iterable<FileStore> getFileStores() {
-        return fileSystem.getFileStores();
+        return this.fileSystem.getFileStores();
     }
 
     @Override
     public Set<String> supportedFileAttributeViews() {
-        return fileSystem.supportedFileAttributeViews();
+        return this.fileSystem.supportedFileAttributeViews();
     }
 
     @Override
-    public Path getPath(String first, String... more) {
-        return fileSystem.getPath(first, more);
+    public Path getPath(final String first, final String... more) {
+        return this.fileSystem.getPath(first, more);
     }
 
     @Override
-    public PathMatcher getPathMatcher(String syntaxAndPattern) {
-        return fileSystem.getPathMatcher(syntaxAndPattern);
+    public PathMatcher getPathMatcher(final String syntaxAndPattern) {
+        return this.fileSystem.getPathMatcher(syntaxAndPattern);
     }
 
     @Override
     public UserPrincipalLookupService getUserPrincipalLookupService() {
-        return fileSystem.getUserPrincipalLookupService();
+        return this.fileSystem.getUserPrincipalLookupService();
     }
 
     @Override
     public WatchService newWatchService() throws IOException {
-        return fileSystem.newWatchService();
+        return this.fileSystem.newWatchService();
     }
 }

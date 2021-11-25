@@ -1,18 +1,18 @@
 # Fake SFTP Server Extension
 
-[![Build Status](https://travis-ci.org/stefanbirkner/fake-sftp-server-extension.svg?branch=master)](https://travis-ci.org/stefanbirkner/fake-sftp-server-extension)
+![build](https://github.com/ppi-ag/fake-sftp-server-extension/actions/workflows/build/badge.svg)
 
 Fake SFTP Server Extension is a JUnit extension that runs an in-memory SFTP server while your tests are running. It uses
 the SFTP server of the
 [Apache SSHD](http://mina.apache.org/sshd-project/index.html) project.
 
 Fake SFTP Server Extension is published under the
-[MIT license](http://opensource.org/licenses/MIT). It requires at least Java 8. Please
-[open an issue](https://github.com/stefanbirkner/fake-sftp-server-Extension/issues/new)
+[MIT license](http://opensource.org/licenses/MIT). It requires at least Java 11. Please
+[open an issue](https://github.com/ppi-ag/fake-sftp-server-extension/issues/new)
 if you want to use it with an older version of Java.
 
-I want to thank my former team SAM at ThoughtWorks for using this library and @crizzis, @OArtyomov and @TheSentinel454
-for their feature requests.
+This repository is based on the [Fake SFTP Server Rule](https://github.com/stefanbirkner/fake-sftp-server-rule)
+by [@stefanbirkner](https://github.com/stefanbirkner).
 
 There is an alternative to Fake SFTP Server Extension that is independent of the test framework. Its name is
 [Fake SFTP Server Lambda](https://github.com/stefanbirkner/fake-sftp-server-lambda).
@@ -23,22 +23,20 @@ Fake SFTP Server Extension is available from
 [Maven Central](https://search.maven.org/#search|ga|1|fake-sftp-server-extension).
 
     <dependency>
-      <groupId>com.github.stefanbirkner</groupId>
+      <groupId>de.ppi</groupId>
       <artifactId>fake-sftp-server-extension</artifactId>
-      <version>3.0.0</version>
+      <version>1.0.0</version>
     </dependency>
-
-If you upgrade from a version < 2.x to the newest version please read the last
-section of this readme.
 
 ## Usage
 
 The Fake SFTP Server Extension is used by adding it to your test class.
 
-    import com.github.stefanbirkner.fakesftpserver.extension.FakeSftpServerExtension;
+    import FakeSftpServerExtension;
 
     public class TestClass {
-      @Extension
+
+      @RegisterExtension
       public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension();
 
       ...
@@ -46,25 +44,27 @@ The Fake SFTP Server Extension is used by adding it to your test class.
 
 This extension starts a server before your test and stops it afterwards.
 
-By default the SFTP server listens on an auto-allocated port. During the test this port can be obtained
-by `sftpServer.getPort()`. It can be changed by calling `setPort(int)`. If you do this from within a test then the
+By default, the SFTP server listens on an auto-allocated port. During the test this port can be obtained
+by `sftpServer.getPort()`. It can be changed by calling `setManualPort(int)`. If you do this from within a test then the
 server gets restarted. The time-consuming restart can be avoided by setting the port immediately after creating the
 extension.
 
     public class TestClass {
-      @Extension
+
+      @RegisterExtension
       public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
-          .setPort(1234);
+          .setManualPort(1234);
 
       ...
     }
 
 You can interact with the SFTP server by using the SFTP protocol with password
-authentication. By default the server accepts every pair of username and
+authentication. By default, the server accepts every pair of username and
 password, but you can restrict it to specific pairs.
 
     public class TestClass {
-      @Extension
+
+      @RegisterExtension
       public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
           .addUser("username", "password");
 
@@ -81,14 +81,16 @@ Extension provides a shortcut for uploading files to the server.
     @Test
     public void testTextFile() {
       sftpServer.putFile("/directory/file.txt", "content of file", UTF_8);
-      //code that downloads the file
+
+      // now you can download the file, just connect via SFTP
     }
 
     @Test
     public void testBinaryFile() {
       byte[] content = createContent();
       sftpServer.putFile("/directory/file.bin", content);
-      //code that downloads the file
+
+      // now you can download the file, just connect via SFTP
     }
 
 Test data that is provided as an input stream can be uploaded directly from that
@@ -98,7 +100,8 @@ input stream. This is very handy if your test data is available as a resource.
     public void testFileFromInputStream() {
       InputStream is = getClass().getResourceAsStream("data.bin");
       sftpServer.putFile("/directory/file.bin", is);
-      //code that downloads the file
+
+      // now you can download the file, just connect via SFTP
     }
 
 If you need an empty directory then you can use the method
@@ -107,7 +110,8 @@ If you need an empty directory then you can use the method
     @Test
     public void testDirectory() {
       sftpServer.createDirectory("/a/directory");
-      //code that reads from or writes to that directory
+
+      // code that reads from or writes to that directory
     }
 
 You may create multiple directories at once with `createDirectories(String...)`.
@@ -118,7 +122,8 @@ You may create multiple directories at once with `createDirectories(String...)`.
         "/a/directory",
         "/another/directory"
       );
-      //code that reads from or writes to that directories
+
+      // code that reads from or writes to that directories
     }
 
 
@@ -129,14 +134,16 @@ provides a shortcut for getting the file's content from the server.
 
     @Test
     public void testTextFile() {
-      //code that uploads the file
+      // code that uploads the file
+
       String fileContent = sftpServer.getFileContent("/directory/file.txt", UTF_8);
       ...
     }
 
     @Test
     public void testBinaryFile() {
-      //code that uploads the file
+      // code that uploads the file
+
       byte[] fileContent = sftpServer.getFileContent("/directory/file.bin");
       ...
     }
@@ -148,12 +155,13 @@ verify that it exists or not.
 
     @Test
     public void testFile() {
-      //code that uploads or deletes the file
+      // code that uploads or deletes the file
+
       boolean exists = sftpServer.existsFile("/directory/file.txt");
       ...
     }
 
-The method returns `true` iff the file exists and it is not a directory.
+The method returns `true` iff the file exists, and it is not a directory.
 
 ### Delete all files
 
@@ -167,9 +175,8 @@ necessary because the extension itself takes care that every test starts and end
 You have three options if you have a feature request, found a bug or simply have a question about Fake SFTP Server
 Extension.
 
-* [Write an issue.](https://github.com/stefanbirkner/fake-sftp-server-extension/issues/new)
+* [Write an issue.](https://github.com/ppi-ag/fake-sftp-server-extension/issues/new)
 * Create a pull request. (See [Understanding the GitHub Flow](https://guides.github.com/introduction/flow/index.html))
-* [Write a mail to mail@stefan-birkner.de](mailto:mail@stefan-birkner.de)
 
 
 ## Development Guide
@@ -183,9 +190,6 @@ Fake SFTP Server Extension is build with [Maven](http://maven.apache.org/). If y
 The basic coding style is described in the
 [EditorConfig](http://editorconfig.org/) file `.editorconfig`.
 
-Fake SFTP Server Extension supports [Travis CI](https://travis-ci.org/) for continuous integration. Your pull request
-will be automatically build by Travis CI.
-
 
 ## Release Guide
 
@@ -196,14 +200,3 @@ will be automatically build by Travis CI.
 * Commit the modified `pom.xml` and `README.md`.
 * Run `mvn clean deploy` with JDK 8.
 * Add a tag for the release: `git tag fake-sftp-server-extension-X.X.X`
-
-
-## Upgrading from 0.x.y or 1.x.y to version >= 2
-
-In older versions the SFTP server listened to port 23454 by default. From version 2 on it selects an arbitrary free port
-by default. If your tests fail after an upgrade you may consider to restore the old behaviour by immediately setting the
-old port after creating the extension.
-
-    @Extension
-    public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
-        .setPort(23454);
