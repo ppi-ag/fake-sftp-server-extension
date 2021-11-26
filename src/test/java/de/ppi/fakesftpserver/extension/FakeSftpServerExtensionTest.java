@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * http://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
  */
 @SuppressWarnings("ClassWithTooManyMethods")
-class FakeSftpServerExtensionTest {
+public class FakeSftpServerExtensionTest {
 
     static final String DUMMY_PASSWORD = "dummy password";
     static final String DUMMY_USER = "dummy user";
@@ -41,7 +41,7 @@ class FakeSftpServerExtensionTest {
 
 
     @Test
-    void a_file_that_is_written_to_the_SFTP_server_can_be_read() throws Exception {
+    public void test() throws Exception {
         final Session session = AssertionHelperUtil.connectToServer(this.sftpServer);
         final ChannelSftp channel = AssertionHelperUtil.connectSftpChannel(session);
         channel.put(new ByteArrayInputStream("dummy content".getBytes(UTF_8)), "dummy_file.txt");
