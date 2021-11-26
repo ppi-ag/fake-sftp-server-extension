@@ -25,25 +25,28 @@ There is an alternative to Fake SFTP Server Extension that is independent of the
 Fake SFTP Server Extension is available from
 [Maven Central](https://search.maven.org/#search|ga|1|fake-sftp-server-extension).
 
-    <dependency>
-      <groupId>de.ppi</groupId>
-      <artifactId>fake-sftp-server-extension</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-
+```xml
+<dependency>
+  <groupId>de.ppi</groupId>
+  <artifactId>fake-sftp-server-extension</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
 ## Usage
 
 The Fake SFTP Server Extension is used by adding it to your test class.
 
-    import FakeSftpServerExtension;
+```java
+import FakeSftpServerExtension;
 
-    public class TestClass {
+public class TestClass {
 
-      @RegisterExtension
-      public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension();
+  @RegisterExtension
+  public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension();
 
-      ...
-    }
+  // ...
+}
+```
 
 This extension starts a server before your test and stops it afterwards.
 
@@ -52,27 +55,31 @@ by `sftpServer.getPort()`. It can be changed by calling `setManualPort(int)`. If
 server gets restarted. The time-consuming restart can be avoided by setting the port immediately after creating the
 extension.
 
-    public class TestClass {
+```java
+public class TestClass {
 
-      @RegisterExtension
-      public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
-          .setManualPort(1234);
+  @RegisterExtension
+  public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
+      .setManualPort(1234);
 
-      ...
-    }
+  // ...
+}
+```
 
 You can interact with the SFTP server by using the SFTP protocol with password
 authentication. By default, the server accepts every pair of username and
 password, but you can restrict it to specific pairs.
 
-    public class TestClass {
+```java
+public class TestClass {
 
-      @RegisterExtension
-      public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
-          .addUser("username", "password");
+  @RegisterExtension
+  public final FakeSftpServerExtension sftpServer = new FakeSftpServerExtension()
+      .addUser("username", "password");
 
-      ...
-    }
+  // ...
+}
+```
 
 It is also possible to do this during the test using the same method.
 
@@ -81,53 +88,61 @@ It is also possible to do this during the test using the same method.
 If you test code that reads files from an SFTP server then you need a server that provides these files. Fake SFTP Server
 Extension provides a shortcut for uploading files to the server.
 
-    @Test
-    public void testTextFile() {
-      sftpServer.putFile("/directory/file.txt", "content of file", UTF_8);
+```java
+@Test
+public void testTextFile() {
+  sftpServer.putFile("/directory/file.txt", "content of file", UTF_8);
 
-      // now you can download the file, just connect via SFTP
-    }
+  // now you can download the file, just connect via SFTP
+}
 
-    @Test
-    public void testBinaryFile() {
-      byte[] content = createContent();
-      sftpServer.putFile("/directory/file.bin", content);
+@Test
+public void testBinaryFile() {
+  byte[] content = createContent();
+  sftpServer.putFile("/directory/file.bin", content);
 
-      // now you can download the file, just connect via SFTP
-    }
+  // now you can download the file, just connect via SFTP
+}
+```
 
 Test data that is provided as an input stream can be uploaded directly from that
 input stream. This is very handy if your test data is available as a resource.
 
-    @Test
-    public void testFileFromInputStream() {
-      InputStream is = getClass().getResourceAsStream("data.bin");
-      sftpServer.putFile("/directory/file.bin", is);
+```java
+@Test
+public void testFileFromInputStream() {
+  InputStream is = getClass().getResourceAsStream("data.bin");
+  sftpServer.putFile("/directory/file.bin", is);
 
-      // now you can download the file, just connect via SFTP
-    }
+  // now you can download the file, just connect via SFTP
+}
+```
 
 If you need an empty directory then you can use the method
 `createDirectory(String)`.
 
-    @Test
-    public void testDirectory() {
-      sftpServer.createDirectory("/a/directory");
+```java
+@Test
+public void testDirectory() {
+  sftpServer.createDirectory("/a/directory");
 
-      // code that reads from or writes to that directory
-    }
+  // code that reads from or writes to that directory
+}
+```
 
 You may create multiple directories at once with `createDirectories(String...)`.
 
-    @Test
-    public void testDirectories() {
-      sftpServer.createDirectories(
-        "/a/directory",
-        "/another/directory"
-      );
+```java
+@Test
+public void testDirectories() {
+  sftpServer.createDirectories(
+    "/a/directory",
+    "/another/directory"
+  );
 
-      // code that reads from or writes to that directories
-    }
+  // code that reads from or writes to that directories
+}
+```
 
 
 ### Testing code that writes files
@@ -135,34 +150,38 @@ You may create multiple directories at once with `createDirectories(String...)`.
 If you test code that writes files to an SFTP server then you need to verify the upload. Fake SFTP Server Extension
 provides a shortcut for getting the file's content from the server.
 
-    @Test
-    public void testTextFile() {
-      // code that uploads the file
+```java
+@Test
+public void testTextFile() {
+  // code that uploads the file
 
-      String fileContent = sftpServer.getFileContent("/directory/file.txt", UTF_8);
-      ...
-    }
+  String fileContent = sftpServer.getFileContent("/directory/file.txt", UTF_8);
+  ...
+}
 
-    @Test
-    public void testBinaryFile() {
-      // code that uploads the file
+@Test
+public void testBinaryFile() {
+  // code that uploads the file
 
-      byte[] fileContent = sftpServer.getFileContent("/directory/file.bin");
-      ...
-    }
+  byte[] fileContent = sftpServer.getFileContent("/directory/file.bin");
+  ...
+}
+```
 
 ### Testing existence of files
 
 If you want to check whether a file hast been created or deleted then you can
 verify that it exists or not.
 
-    @Test
-    public void testFile() {
-      // code that uploads or deletes the file
+```java
+@Test
+public void testFile() {
+  // code that uploads or deletes the file
 
-      boolean exists = sftpServer.existsFile("/directory/file.txt");
-      ...
-    }
+  boolean exists = sftpServer.existsFile("/directory/file.txt");
+  ...
+}
+```
 
 The method returns `true` iff the file exists, and it is not a directory.
 
