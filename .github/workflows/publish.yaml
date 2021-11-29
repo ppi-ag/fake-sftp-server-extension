@@ -1,5 +1,8 @@
 name: Publish package to the Maven Central Repository
 on:
+    push:
+        branches:
+            - feature/deployment
     release:
         types: [ created ]
 jobs:
@@ -18,6 +21,7 @@ jobs:
                     server-username: MAVEN_USERNAME
                     server-password: MAVEN_PASSWORD
                     gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+                    gpg-passphrase:  ${{ secrets.GPG_PASSPHRASE }}
 
             -   name: Publish package
                 run: mvn --batch-mode deploy
