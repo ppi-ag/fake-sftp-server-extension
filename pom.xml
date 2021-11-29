@@ -12,6 +12,15 @@
     <description>Fake SFTP Server Extension is a JUnit extension that runs an in-memory SFTP server.</description>
     <url>https://github.com/ppi-ag/fake-sftp-server-extension/</url>
     <inceptionYear>2021</inceptionYear>
+    <developers>
+        <developer>
+            <name>Andre Köpke</name>
+            <email>akop@ppi.de</email>
+            <url>https://akop.online</url>
+            <organization>PPI AG</organization>
+            <organizationUrl>https://github.com/ppi-ag</organizationUrl>
+        </developer>
+    </developers>
     <licenses>
         <license>
             <name>MIT License</name>
@@ -45,7 +54,13 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -130,6 +145,25 @@
                         <phase>prepare-package</phase>
                         <goals>
                             <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>attach-javadoc</id>
+                        <goals>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
