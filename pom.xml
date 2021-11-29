@@ -57,7 +57,7 @@
             <id>release-sign-artifacts</id>
             <activation>
                 <property>
-                    <name>env.performRelease</name>
+                    <name>env.PERFORM_RELEASE</name>
                     <value>true</value>
                 </property>
             </activation>
