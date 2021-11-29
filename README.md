@@ -1,6 +1,6 @@
 # Fake SFTP Server Extension
 
-![build](https://github.com/ppi-ag/fake-sftp-server-extension/actions/workflows/build.yaml/badge.svg)
+![build](https://github.com/ppi-ag/fake-sftp-server-extension/actions/workflows/publish.yaml/badge.svg)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
