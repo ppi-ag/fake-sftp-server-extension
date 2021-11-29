@@ -12,7 +12,6 @@
         <option value="unqualifiedMethodAccess" />
         <option value="useBlocks" />
         <option value="unnecessarySemicolon" />
-        <option value="accessCanBeTightened" />
       </set>
     </option>
     <option name="configurationPath" value="" />

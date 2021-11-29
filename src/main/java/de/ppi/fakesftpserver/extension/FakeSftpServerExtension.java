@@ -199,7 +199,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @return the port of the SFTP server.
      * @throws IllegalStateException if you call the method outside a test.
      */
-    int getPort() {
+    public int getPort() {
         this.verifyThatFileSystemIsOpen("call getPort()");
         return this.server.getPort();
     }
@@ -214,7 +214,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IllegalArgumentException if the port is not between 1 and 65535.
      * @throws IllegalStateException    if the server cannot be restarted.
      */
-    FakeSftpServerExtension setManualPort(final int port) {
+    public FakeSftpServerExtension setManualPort(final int port) {
         if (port < LOWEST_PORT || port > HIGHEST_PORT) {
             throw new IllegalArgumentException("Port cannot be set to "
                 + port
@@ -241,7 +241,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param password the password for the specified username.
      * @return the Extension itself.
      */
-    FakeSftpServerExtension addUser(@NonNull final String username, @NonNull final String password) {
+    public FakeSftpServerExtension addUser(@NonNull final String username, @NonNull final String password) {
         this.authenticator.putUser(username, password);
         return this;
     }
@@ -255,7 +255,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param encoding the encoding of the file.
      * @throws IOException if the file cannot be written.
      */
-    void putFile(final String path, final String content, final Charset encoding) throws IOException {
+    public void putFile(final String path, final String content, final Charset encoding) throws IOException {
         final byte[] contentAsBytes = content.getBytes(encoding);
         this.putFile(path, contentAsBytes);
     }
@@ -268,7 +268,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param content the files content.
      * @throws IOException if the file cannot be written.
      */
-    private void putFile(final String path, final byte[] content) throws IOException {
+    public void putFile(final String path, final byte[] content) throws IOException {
         this.verifyThatFileSystemIsOpen("upload file");
         final Path pathAsObject = this.fileSystem.getPath(path);
         SftpServerUtil.ensureDirectoryOfPathExists(pathAsObject);
@@ -284,7 +284,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException if the file cannot be written or the input stream
      *                     cannot be read.
      */
-    void putFile(final String path, final InputStream is) throws IOException {
+    public void putFile(final String path, final InputStream is) throws IOException {
         this.verifyThatFileSystemIsOpen("upload file");
         final Path pathAsObject = this.fileSystem.getPath(path);
         SftpServerUtil.ensureDirectoryOfPathExists(pathAsObject);
@@ -297,7 +297,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param path the directory's path.
      * @throws IOException if the directory cannot be created.
      */
-    void createDirectory(final String path) throws IOException {
+    public void createDirectory(final String path) throws IOException {
         this.verifyThatFileSystemIsOpen("create directory");
         final Path pathAsObject = this.fileSystem.getPath(path);
         Files.createDirectories(pathAsObject);
@@ -309,7 +309,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @param paths the directories' paths.
      * @throws IOException if at least one directory cannot be created.
      */
-    void createDirectories(final String... paths) throws IOException {
+    public void createDirectories(final String... paths) throws IOException {
         for (final String path : paths) {
             this.createDirectory(path);
         }
@@ -325,7 +325,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException           if the file cannot be read.
      * @throws IllegalStateException if not called from within a test.
      */
-    String getFileContent(final String path, final Charset encoding) throws IOException {
+    public String getFileContent(final String path, final Charset encoding) throws IOException {
         final byte[] content = this.getFileContent(path);
         return new String(content, encoding);
     }
@@ -338,7 +338,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException           if the file cannot be read.
      * @throws IllegalStateException if not called from within a test.
      */
-    byte[] getFileContent(final String path) throws IOException {
+    public byte[] getFileContent(final String path) throws IOException {
         this.verifyThatFileSystemIsOpen("download file");
         final Path pathAsObject = this.fileSystem.getPath(path);
         return readAllBytes(pathAsObject);
@@ -352,7 +352,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @return {@code true} iff the file exists, and it is not a directory.
      * @throws IllegalStateException if not called from within a test.
      */
-    boolean existsFile(final String path) {
+    public boolean existsFile(final String path) {
         this.verifyThatFileSystemIsOpen("check existence of file");
         final Path pathAsObject = this.fileSystem.getPath(path);
         return exists(pathAsObject) && !isDirectory(pathAsObject);
@@ -364,7 +364,7 @@ public class FakeSftpServerExtension implements AfterEachCallback, BeforeEachCal
      * @throws IOException if an I/O error is thrown while deleting the files
      *                     and directories
      */
-    void deleteAllFilesAndDirectories() throws IOException {
+    public void deleteAllFilesAndDirectories() throws IOException {
         for (final Path directory : this.fileSystem.getRootDirectories()) {
             walkFileTree(directory, new DeleteAllFilesVisitor());
         }
