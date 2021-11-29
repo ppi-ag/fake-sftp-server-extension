@@ -29,7 +29,8 @@ Fake SFTP Server Extension is available from
 <dependency>
   <groupId>de.ppi</groupId>
   <artifactId>fake-sftp-server-extension</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
+  <scope>test</scope>
 </dependency>
 ```
 ## Usage
