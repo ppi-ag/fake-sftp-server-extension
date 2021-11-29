@@ -24,7 +24,7 @@ jobs:
                     gpg-passphrase:  ${{ secrets.GPG_PASSPHRASE }}
 
             -   name: Publish package
-                run: mvn -P  --batch-mode deploy
+                run: mvn --batch-mode deploy
                 env:
                     MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
                     MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
