@@ -5,21 +5,25 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class TestForPublicAccess {
 
+    public static final int RANDOM_PORT = 4344;
+
     @RegisterExtension
-    private FakeSftpServerExtension extension = new FakeSftpServerExtension();
+    private final FakeSftpServerExtension extension = new FakeSftpServerExtension();
 
     @Test
-    void testThatMethodsAreAccessible() throws IOException {
-        this.extension.addUser("test", "test")
-            .setManualPort(4344);
+    void testThatMethodsAreAccessible() {
+        assertDoesNotThrow(() -> this.extension.addUser("test", "test")
+            .setManualPort(RANDOM_PORT));
 
-        this.extension.getPort();
-        this.extension.existsFile("gfdsg");
-        this.extension.putFile("test.txt", IOUtils.toInputStream("test", StandardCharsets.UTF_8));
+        assertDoesNotThrow(this.extension::getPort);
+        assertDoesNotThrow(() -> this.extension.existsFile("gfdsg"));
+        assertDoesNotThrow(() ->
+            this.extension.putFile("test.txt", IOUtils.toInputStream("test", StandardCharsets.UTF_8)));
     }
 }
