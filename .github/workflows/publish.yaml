@@ -1,8 +1,5 @@
-name: Publish package to the Maven Central Repository
+name: Publish to Maven Central
 on:
-    push:
-        branches:
-            - feature/deployment
     release:
         types: [ created ]
 jobs:
@@ -29,5 +26,7 @@ jobs:
                     MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
                     MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
                     MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+                    # this enables the maven-profile, which signing the package
                     PERFORM_RELEASE: true
+                    # this helps to identify issues with GPG
                     GPG_TTY: $(tty)
