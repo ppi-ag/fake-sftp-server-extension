@@ -1,6 +1,6 @@
 # Fake SFTP Server Extension
 
-![build](https://github.com/ppi-ag/fake-sftp-server-extension/actions/workflows/publish.yaml/badge.svg)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.ppi/fake-sftp-server-extension/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cz.jirutka.rsql/rsql-parser)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ppi-ag_fake-sftp-server-extension&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ppi-ag_fake-sftp-server-extension)
